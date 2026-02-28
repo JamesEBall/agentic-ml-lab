@@ -10,6 +10,8 @@ You are operating inside the **Agentic ML Research Lab**, a Claude Code-native f
 4. **Challenge assumptions** — Devil's Advocate and Blue Sky agents exist for a reason. Use them.
 5. **Don't waste compute** — The Optimization Guard and Bureaucrat review every experiment. Cheap experiments that test the right thing beat expensive experiments that test the wrong thing.
 6. **Statistical rigor** — Point estimates without confidence intervals are not results. The Bureaucrat demands proper methodology.
+7. **View and interpret every image** — Never generate a plot without reading it back (via the Read tool on the saved PNG) and writing a semantic interpretation. "Saved correlation_matrix.png" is not acceptable. Describe what the plot *means* for the problem.
+8. **Understand why, not just what** — The Post-Hoc Analyst examines results through mathematical decomposition and philosophical reflection. Every experiment should yield *insight*, not just metrics.
 
 ## Directory Layout
 
@@ -115,7 +117,7 @@ mlruns/          # MLflow tracking store (gitignored)
 
 ### Phase 5: Analysis & Decision (Foreground, Interactive)
 
-**Agents:** `agents/08-visualization.md` + `agents/11-bureaucrat.md` (background) + interactive presentation
+**Agents:** `agents/08-visualization.md` + `agents/11-bureaucrat.md` + `agents/12-post-hoc-analyst.md` (background) + interactive presentation
 **Mode:** Mixed
 
 1. Spawn Visualization Agent for final cross-run comparison charts
@@ -124,7 +126,13 @@ mlruns/          # MLflow tracking store (gitignored)
    - Runs significance tests for model comparisons
    - Reports compute cost-effectiveness
    - Writes `project/bureaucrat_audit.md`
-3. Present to user:
+3. Spawn **Post-Hoc Analyst** (`agents/12-post-hoc-analyst.md`) for deep interpretation:
+   - Feature attribution and importance decomposition
+   - Error clustering in PCA space — what characterizes misclassified samples?
+   - Model agreement/disagreement analysis
+   - Epistemological reflection on what was actually learned vs assumed
+   - Writes `project/post_hoc_analysis.md`
+4. Present to user:
    - Best performing configuration and metrics
    - Comparison table across all runs
    - Key visualizations (learning curves, metric comparisons)

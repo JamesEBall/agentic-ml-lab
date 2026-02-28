@@ -34,7 +34,7 @@ Phase 5: Analysis ─────────── statistical audit + comparis
 Iterate / Pivot / Done
 ```
 
-## Agent Roster (15 agents)
+## Agent Roster (16 agents)
 
 | Agent | File | Mode | Role |
 |-------|------|------|------|
@@ -49,10 +49,11 @@ Iterate / Pivot / Done
 | Iterator/Evaluator | `05-iterator-evaluator.md` | Background | Core engine: runs experiments, detects pathologies, decides next steps |
 | Devil's Advocate | `06-devils-advocate.md` | Background | Challenges assumptions, finds weaknesses |
 | Blue Sky | `07-blue-sky.md` | Background | Proposes creative alternative approaches |
-| Visualization | `08-visualization.md` | Background | EDA, training curves, cross-run comparison plots |
+| Visualization | `08-visualization.md` | Background | EDA, training curves, cross-run comparison — **views and interprets every image** |
 | Model Builder | `09-model-builder.md` | Background | Translates configs into correct, runnable training code |
 | Optimization Guard | `10-optimization-guard.md` | Background | Pre-flight: estimates time, catches bad configs, enforces budgets |
 | The Bureaucrat | `11-bureaucrat.md` | Background | Audits statistical rigor, computes confidence intervals, tracks costs |
+| Post-Hoc Analyst | `12-post-hoc-analyst.md` | Background | Deep interpretive analysis — feature attribution, error clustering, epistemological reflection |
 
 ## Key Philosophy
 
@@ -62,6 +63,8 @@ Iterate / Pivot / Done
 4. **Challenge assumptions** — Devil's Advocate and Blue Sky agents keep you honest
 5. **Don't waste compute** — Optimization Guard reviews configs before execution
 6. **Statistical rigor** — The Bureaucrat demands confidence intervals and significance tests
+7. **See the data** — Every plot is viewed and interpreted semantically, not just saved to disk
+8. **Understand why** — Post-Hoc Analyst decomposes results mathematically and reflects epistemologically
 
 ## Validated End-to-End
 
@@ -83,7 +86,7 @@ Phase 5: Comparison visualization + iteration report  ✓
 
 ```
 ├── CLAUDE.md              # Orchestration brain — defines the 5-phase workflow
-├── agents/                # 15 agent prompt templates (.md files)
+├── agents/                # 16 agent prompt templates (.md files)
 ├── templates/             # 8 document templates for structured agent output
 ├── utils/                 # Python utilities
 │   ├── mlflow_helper.py   #   MLflow tracking (init, log, compare)
