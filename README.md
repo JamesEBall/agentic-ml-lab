@@ -75,21 +75,44 @@ These agents exist because unchallenged ML plans waste compute.
 | The Bureaucrat | `11-bureaucrat.md` | Deeply, perpetually concerned about statistical validity. "Your 96.7% accuracy has a 95% CI of ±7% on 30 samples. That is NOT 96.7% accuracy." Demands p-values. Tracks cost per % improvement. |
 | Post-Hoc Analyst | `12-post-hoc-analyst.md` | Works after the numbers are in. Feature attribution, error clustering in PCA space, model agreement maps, and epistemological reflection — "what do these results actually *prove*?" |
 
+## Lessons from ESTA
+
+Full writeup: [`docs/lessons_from_esta.md`](docs/lessons_from_esta.md) | Original design doc: [`docs/bootstrap_prompt.md`](docs/bootstrap_prompt.md)
+
+These are the critical failure modes discovered during the ESTA playstyle discovery project that the agents now encode:
+
+| Lesson | What Happened | How It Was Fixed |
+|--------|--------------|------------------|
+| Posterior collapse | free_bits=0.1 let model use 2 of 32 dims while reporting 15/16 "active" | Raised free_bits to 1.0, lowered beta to 0.1 |
+| Cyclical annealing | Structure appeared then was destroyed each cycle | Disabled cyclical, used linear warmup only |
+| Euclidean on hyperbolic | PCA on Lorentz spatial coords = mathematical error | Must use tangent-space PCA via logarithmic map |
+| Map confound (20.3% R^2) | Clusters were separating maps, not playstyles | Always regress latent space against potential confounds |
+| Continuous not discrete | No discrete playstyle clusters exist after removing confounds | Switch from cluster metrics to manifold metrics |
+| Player consistency 0.949 | Players vary almost as much within as between each other | Round-level identity signal is near zero |
+| Misleading silhouette | Positive score measured map separation, not playstyle | Color UMAP by confounds to audit what silhouette measures |
+| TC on MPS (50-80s/batch) | alpha-TCVAE O(B^2*D) computation hung on Apple Silicon | Switch to proxy method (off-diagonal covariance) |
+| Misleading active dims | Threshold count included dims at free_bits floor | Visualize per-dim KL distribution, not scalar count |
+| Simple beats complex | beta change = 10x improvement; hyperbolic VAE = marginal | Always test boring baselines before novel architecture |
+| No upfront criteria | Moved goalposts after seeing results | Define falsifiable success criteria before training |
+
 ## Architecture
 
 ```
-CLAUDE.md              ← The brain. 5-phase workflow, agent spawning patterns, MLflow conventions.
-agents/                ← 16 agent prompt templates (.md files)
-templates/             ← 8 structured output templates (problem_spec, research_brief, experiment_plan, etc.)
+CLAUDE.md              <- The brain. 5-phase workflow, agent spawning patterns, MLflow conventions.
+agents/                <- 16 agent prompt templates (.md files)
+templates/             <- 8 structured output templates (problem_spec, research_brief, experiment_plan, etc.)
 utils/
-├── mlflow_helper.py   ← init, start_run, log_metrics/params/artifacts, compare_runs, get_best_run
-├── metrics.py         ← 15 metrics: accuracy, F1, AUC, RMSE, MAE, R², MAPE, MCC, NDCG, ...
-├── viz.py             ← ~20 plot functions (distributions, correlation, training curves, confusion matrix, ...)
-├── config.py          ← YAML load/save/merge/validate/diff
-├── data_loader.py     ← CSV, Parquet, JSON, Excel, HuggingFace datasets, auto-detection, train/val/test split
-└── file_io.py         ← Status updates (append-only log), project directory management
-project/               ← Working directory: data/, configs/, results/, visualizations/, scripts/, research/
-mlruns/                ← MLflow tracking store (gitignored)
+|-- mlflow_helper.py   <- init, start_run, log_metrics/params/artifacts, compare_runs, get_best_run
+|-- metrics.py         <- 15 metrics: accuracy, F1, AUC, RMSE, MAE, R^2, MAPE, MCC, NDCG, ...
+|-- viz.py             <- ~20 plot functions (distributions, correlation, training curves, confusion matrix, ...)
+|-- config.py          <- YAML load/save/merge/validate/diff
+|-- data_loader.py     <- CSV, Parquet, JSON, Excel, HuggingFace datasets, auto-detection, train/val/test split
+|-- file_io.py         <- Status updates (append-only log), project directory management
+docs/
+|-- bootstrap_prompt.md    <- Original design document from the ESTA project
+|-- lessons_from_esta.md   <- 11 critical lessons with detection signals and fixes
+project/               <- Working directory: data/, configs/, results/, visualizations/, scripts/, research/
+mlruns/                <- MLflow tracking store (gitignored)
 ```
 
 Agents communicate through files in `project/`. Status updates go to `project/status.md` (append-only). Configs are YAML. Visualizations land in `project/visualizations/{eda,training,analysis}/`.

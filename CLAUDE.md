@@ -1,23 +1,31 @@
-# Agentic ML Research Lab — Orchestration Guide
+# Agentic ML Research Lab -- Orchestration Guide
 
 You are operating inside the **Agentic ML Research Lab**, a Claude Code-native framework for running the full ML research lifecycle. This file defines how you orchestrate agents, track experiments, and communicate results.
 
+## Origin Story
+
+This framework was born from building ESTA (Esports Temporal-Spatial Analytics) -- a CS:GO playstyle discovery system using a Hierarchical Transformer beta-VAE. After months of manual training, debugging posterior collapse, fighting MPS backend issues, and discovering that our evaluation metrics were measuring map geometry instead of player behavior, we distilled every hard-won lesson into this reusable pipeline.
+
+**Read `docs/lessons_from_esta.md` before your first experiment.** It documents 11 critical failure modes with detection signals and fixes.
+
 ## Core Philosophy
 
-1. **Data first** — Always look at the data before modeling. The Visualization Agent runs in every phase.
-2. **Iteration > initial design** — Simple hyperparameter changes often have 10x more impact than architectural changes. The loop matters more than the plan.
-3. **Track everything** — Every experiment goes through MLflow. Every result gets committed to git.
-4. **Challenge assumptions** — Devil's Advocate and Blue Sky agents exist for a reason. Use them.
-5. **Don't waste compute** — The Optimization Guard and Bureaucrat review every experiment. Cheap experiments that test the right thing beat expensive experiments that test the wrong thing.
-6. **Statistical rigor** — Point estimates without confidence intervals are not results. The Bureaucrat demands proper methodology.
-7. **View and interpret every image** — Never generate a plot without reading it back (via the Read tool on the saved PNG) and writing a semantic interpretation. "Saved correlation_matrix.png" is not acceptable. Describe what the plot *means* for the problem.
-8. **Understand why, not just what** — The Post-Hoc Analyst examines results through mathematical decomposition and philosophical reflection. Every experiment should yield *insight*, not just metrics.
+1. **Data first** -- Always look at the data before modeling. The Visualization Agent runs in every phase.
+2. **Iteration > initial design** -- Simple hyperparameter changes often have 10x more impact than architectural changes. The loop matters more than the plan.
+3. **Track everything** -- Every experiment goes through MLflow. Every result gets committed to git.
+4. **Challenge assumptions** -- Devil's Advocate and Blue Sky agents exist for a reason. Use them.
+5. **Don't waste compute** -- The Optimization Guard and Bureaucrat review every experiment. Cheap experiments that test the right thing beat expensive experiments that test the wrong thing.
+6. **Statistical rigor** -- Point estimates without confidence intervals are not results. The Bureaucrat demands proper methodology.
+7. **View and interpret every image** -- Never generate a plot without reading it back (via the Read tool on the saved PNG) and writing a semantic interpretation. "Saved correlation_matrix.png" is not acceptable. Describe what the plot *means* for the problem.
+8. **Understand why, not just what** -- The Post-Hoc Analyst examines results through mathematical decomposition and philosophical reflection. Every experiment should yield *insight*, not just metrics.
+9. **Define success criteria BEFORE training** -- Concrete, falsifiable metrics with thresholds. No moving goalposts. If criteria must change, document the revision explicitly.
+10. **Audit every metric** -- A metric can be positive and still be measuring the wrong thing. Always ask "what is this metric actually measuring?" (See: silhouette measuring map separation, active dims counting free_bits floor as "active")
 
 ## Directory Layout
 
 ```
 agents/          # Agent prompt templates (read these, spawn via Agent tool)
-templates/       # Document templates agents fill in → project/
+templates/       # Document templates agents fill in -> project/
 utils/           # Python utilities for MLflow, metrics, viz, config, data, file I/O
 project/         # Working directory for the current project
   data/          # Datasets
@@ -25,8 +33,49 @@ project/         # Working directory for the current project
   results/       # Experiment outputs
   visualizations/# All plots and charts
   logs/          # Training logs
+docs/            # Project documentation
+  bootstrap_prompt.md   # Original design document from ESTA
+  lessons_from_esta.md  # 11 critical lessons with detection signals
 mlruns/          # MLflow tracking store (gitignored)
 ```
+
+## The Agent Roster (16 Agents)
+
+### Phase 1: Problem Intake (Foreground, Interactive)
+| Agent | File | Role |
+|-------|------|------|
+| Problem Intake | `agents/01-problem-intake.md` | Interviews user, detects compute environment, writes problem spec |
+
+### Phase 2: Research Sprint (Background, Parallel)
+| Agent | File | Role |
+|-------|------|------|
+| Research Orchestrator | `agents/02-research-orchestrator.md` | Coordinates 4 parallel research sub-agents |
+| Dataset Discovery | `agents/02a-dataset-discovery.md` | Finds relevant datasets across HuggingFace, Kaggle, Papers With Code |
+| Benchmark Search | `agents/02b-benchmark.md` | Finds SOTA benchmarks, leaderboards, baselines |
+| Paper Search | `agents/02c-paper-search.md` | Searches arXiv, Semantic Scholar for relevant papers |
+| Blog & Material | `agents/02d-blog-material.md` | Finds tutorials, code repos, pretrained models |
+
+### Phase 3: Plan Refinement (Mixed)
+| Agent | File | Role |
+|-------|------|------|
+| Plan Refinement | `agents/03-plan-refinement.md` | Refines experiment plan interactively with user |
+| Devil's Advocate | `agents/06-devils-advocate.md` | Challenges assumptions, finds confounds, demands rigor |
+| Blue Sky | `agents/07-blue-sky.md` | Proposes creative alternative approaches |
+
+### Phase 4: Experiment Execution (Background, Iterative)
+| Agent | File | Role |
+|-------|------|------|
+| Experiment Design | `agents/04-experiment-design.md` | Generates concrete YAML run configs |
+| Iterator/Evaluator | `agents/05-iterator-evaluator.md` | Core engine: runs experiments, detects pathologies, decides next steps |
+| Visualization | `agents/08-visualization.md` | EDA, training curves, cross-run comparison -- views and interprets every image |
+| Model Builder | `agents/09-model-builder.md` | Translates configs into correct, runnable training code |
+| Optimization Guard | `agents/10-optimization-guard.md` | Pre-flight: estimates time, catches bad configs, enforces budgets |
+
+### Phase 5: Analysis & Decision (Mixed)
+| Agent | File | Role |
+|-------|------|------|
+| The Bureaucrat | `agents/11-bureaucrat.md` | Audits statistical rigor, computes CIs, tracks costs |
+| Post-Hoc Analyst | `agents/12-post-hoc-analyst.md` | Deep interpretive analysis -- feature attribution, error clustering, epistemological reflection |
 
 ## The 5-Phase Workflow
 
@@ -46,9 +95,10 @@ mlruns/          # MLflow tracking store (gitignored)
    - If local: detect GPU via `nvidia-smi` or `system_profiler SPDisplaysDataType` (Mac)
    - If remote: ask for platform name, research it via web search, ask for SSH/API details
    - Write compute setup instructions into problem_spec.md
-4. Fill in `templates/problem_spec.md` → save to `project/problem_spec.md`
-5. **Git commit:** `"Phase 1: Problem specification for {project_name}"`
-6. **Git push**
+4. **CRITICAL: Define falsifiable success criteria** with concrete thresholds BEFORE any training
+5. Fill in `templates/problem_spec.md` -> save to `project/problem_spec.md`
+6. **Git commit:** `"Phase 1: Problem specification for {project_name}"`
+7. **Git push**
 
 ### Phase 2: Research Sprint (Background, Parallel)
 
@@ -57,15 +107,15 @@ mlruns/          # MLflow tracking store (gitignored)
 
 1. Read `agents/02-research-orchestrator.md` and spawn it as a background agent
 2. The orchestrator spawns 4 research sub-agents in parallel:
-   - `agents/02a-dataset-discovery.md` — Find relevant datasets
-   - `agents/02b-benchmark.md` — Find SOTA benchmarks and baselines
-   - `agents/02c-paper-search.md` — Search for relevant papers
-   - `agents/02d-blog-material.md` — Find blogs, tutorials, code examples
+   - `agents/02a-dataset-discovery.md` -- Find relevant datasets
+   - `agents/02b-benchmark.md` -- Find SOTA benchmarks and baselines
+   - `agents/02c-paper-search.md` -- Search for relevant papers
+   - `agents/02d-blog-material.md` -- Find blogs, tutorials, code examples
 3. **Simultaneously** spawn `agents/08-visualization.md` for EDA:
    - Load the data
    - Generate distribution plots, correlation matrices, sample previews
    - Save all plots to `project/visualizations/eda/`
-4. Orchestrator compiles findings into `templates/research_brief.md` → `project/research_brief.md`
+4. Orchestrator compiles findings into `templates/research_brief.md` -> `project/research_brief.md`
 5. **Git commit:** `"Phase 2: Research brief and EDA for {project_name}"`
 6. **Git push**
 
@@ -74,15 +124,16 @@ mlruns/          # MLflow tracking store (gitignored)
 **Agents:** `agents/03-plan-refinement.md` (foreground) + `agents/06-devils-advocate.md` + `agents/07-blue-sky.md` (background)
 **Mode:** Mixed
 
-1. Spawn Devil's Advocate (`agents/06-devils-advocate.md`) in background — reads problem_spec + research_brief, writes critique
-2. Spawn Blue Sky (`agents/07-blue-sky.md`) in background — proposes creative alternatives
+1. Spawn Devil's Advocate (`agents/06-devils-advocate.md`) in background -- reads problem_spec + research_brief, writes critique
+2. Spawn Blue Sky (`agents/07-blue-sky.md`) in background -- proposes creative alternatives
 3. In foreground, run Plan Refinement (`agents/03-plan-refinement.md`):
    - Present research findings to user
    - Show EDA visualizations
    - Present Devil's Advocate critique and Blue Sky ideas when they complete
    - Discuss and iterate on the experiment plan
+   - **Ensure plan includes "boring baselines" (simple hyperparameter sweeps) alongside novel approaches**
    - User approves final plan
-4. Fill in `templates/experiment_plan.md` → `project/experiment_plan.md`
+4. Fill in `templates/experiment_plan.md` -> `project/experiment_plan.md`
 5. Update `agents/08-visualization.md` with training visualization plan
 6. **Git commit:** `"Phase 3: Experiment plan for {project_name}"`
 7. **Git push**
@@ -93,10 +144,12 @@ mlruns/          # MLflow tracking store (gitignored)
 **Mode:** Background (iterative loop)
 
 1. Spawn Experiment Design (`agents/04-experiment-design.md`) to generate initial YAML configs
-2. For each experiment run:
+2. **Schedule simple hyperparameter changes FIRST, complex architectural changes SECOND**
+3. For each experiment run:
    a. **Optimization Guard** (`agents/10-optimization-guard.md`) reviews the config first:
       - Estimates training time
       - Checks for misconfigurations (bad LR, too many epochs, wrong device)
+      - **Profiles a single batch forward+backward on target hardware**
       - Verifies compute budget
       - APPROVE / WARN / REJECT
    b. **Model Builder** (`agents/09-model-builder.md`) writes the training script:
@@ -104,15 +157,14 @@ mlruns/          # MLflow tracking store (gitignored)
       - Handles framework detection (sklearn, PyTorch, XGBoost)
       - Sets up data pipeline with proper train/test isolation
    c. Iterator/Evaluator (`agents/05-iterator-evaluator.md`) executes the run:
-      - Write training script based on config
       - Run training (on detected compute environment)
       - Log metrics/params/artifacts to MLflow
-      - Detect pathologies (loss plateau, mode collapse, overfitting)
+      - **Detect pathologies** (see Pathology Detection below)
       - Make decision: continue / adjust hyperparams / stop early
-   b. Visualization Agent creates per-run training plots
-   c. Fill in `templates/experiment_result.md` for this run
-   d. **Git commit:** `"Phase 4: Experiment run {run_id} — {brief_result}"`
-3. After all runs complete (or iteration budget exhausted):
+   d. Visualization Agent creates per-run training plots
+   e. Fill in `templates/experiment_result.md` for this run
+   f. **Git commit:** `"Phase 4: Experiment run {run_id} -- {brief_result}"`
+4. After all runs complete (or iteration budget exhausted):
    - **Git push**
 
 ### Phase 5: Analysis & Decision (Foreground, Interactive)
@@ -128,8 +180,10 @@ mlruns/          # MLflow tracking store (gitignored)
    - Writes `project/bureaucrat_audit.md`
 3. Spawn **Post-Hoc Analyst** (`agents/12-post-hoc-analyst.md`) for deep interpretation:
    - Feature attribution and importance decomposition
-   - Error clustering in PCA space — what characterizes misclassified samples?
+   - Error clustering in PCA space -- what characterizes misclassified samples?
    - Model agreement/disagreement analysis
+   - **Confound audit**: test whether results are driven by confounding variables
+   - **Metric-space correctness**: verify analysis uses correct geometry for the representation space
    - Epistemological reflection on what was actually learned vs assumed
    - Writes `project/post_hoc_analysis.md`
 4. Present to user:
@@ -137,10 +191,27 @@ mlruns/          # MLflow tracking store (gitignored)
    - Comparison table across all runs
    - Key visualizations (learning curves, metric comparisons)
    - What worked, what didn't, and why
-3. Fill in `templates/iteration_report.md` → `project/iteration_report.md`
-4. User decides: **Iterate** (back to Phase 3 or 4), **Pivot** (back to Phase 1), or **Done**
-5. **Git commit:** `"Phase 5: Analysis report — {decision}"`
-6. **Git push**
+5. Fill in `templates/iteration_report.md` -> `project/iteration_report.md`
+6. User decides: **Iterate** (back to Phase 3 or 4), **Pivot** (back to Phase 1), or **Done**
+7. **Git commit:** `"Phase 5: Analysis report -- {decision}"`
+8. **Git push**
+
+## Pathology Detection (Iterator Agent Must Check)
+
+These are the pathologies discovered during ESTA development. The Iterator agent must monitor for all of them:
+
+| Pathology | Detection Signal | Recommended Fix |
+|-----------|-----------------|-----------------|
+| Posterior collapse (VAE) | Per-dim KL: 1-2 bars tall, rest at floor | Lower beta, raise free_bits |
+| False "active dims" | Metric says 15/16 active, but per-dim KL shows most at floor | Visualize per-dim KL, raise free_bits, lower threshold |
+| Cyclical annealing destroying structure | UMAP structure appears/disappears cyclically | Disable cyclical, use linear warmup only |
+| TC computation too slow | >10s per batch, process hangs | Switch to proxy method (off-diagonal covariance) |
+| Confounded clusters | Silhouette > 0 but clusters match a confound variable | Condition on confound, re-evaluate. Compute R-squared of confound |
+| Misleading silhouette | Positive silhouette driven by confound not target | Color UMAP by confounds, compute confound R-squared |
+| Loss plateau | Loss unchanged for >N epochs | Adjust LR, check gradient norms, try different optimizer |
+| Overfitting | Train loss decreasing, val loss increasing | Regularization, data augmentation, early stopping |
+| Mode collapse (GAN/VAE) | Generated samples lack diversity | Diversity loss, different sampling strategy |
+| Hardware crash false alarm | W&B says "crashed" but process alive | Check checkpoint timestamps, `ps aux`, not W&B status |
 
 ## Agent Spawning Patterns
 
@@ -224,15 +295,32 @@ The Problem Intake agent detects and documents the compute environment:
    - How to execute training scripts
    - Special considerations (MPS backend, CUDA version, memory limits)
 
+4. **MPS-specific caveats** (from ESTA experience):
+   - `torch.linalg.logdet` not supported
+   - `torch.linalg.lu_solve` not supported
+   - O(B^2) pairwise operations can cause 50-80s/batch hangs
+   - Long-running compute can enter UN (uninterruptible sleep) state
+   - W&B heartbeat can be lost during UN state -- verify via checkpoint timestamps
+   - PyTorch 2.6 requires `weights_only=False` for `torch.load`
+
 ## Key Utilities
 
 Always use the Python utilities in `utils/` rather than writing one-off code:
-- `utils/mlflow_helper.py` — All MLflow operations
-- `utils/metrics.py` — Metric computation (classification, regression, ranking)
-- `utils/viz.py` — All visualization (EDA, training curves, evaluation plots)
-- `utils/config.py` — YAML config management
-- `utils/data_loader.py` — Data loading and validation
-- `utils/file_io.py` — Status updates, project directory management
+- `utils/mlflow_helper.py` -- All MLflow operations
+- `utils/metrics.py` -- Metric computation (classification, regression, ranking)
+- `utils/viz.py` -- All visualization (EDA, training curves, evaluation plots)
+- `utils/config.py` -- YAML config management
+- `utils/data_loader.py` -- Data loading and validation
+- `utils/file_io.py` -- Status updates, project directory management
+
+## Development Workflow Preferences
+
+- **Always use background agents** for research, journal updates, paper downloads, and similar non-blocking tasks
+- **Always run a documentation agent** in the background when building -- keeps docs updated as code changes
+- **Always run a devil's advocate agent** in the background -- challenges design decisions, finds flaws
+- **Always run a blue sky research agent** in the background -- web searches for related solutions/papers/approaches
+- **Push to git regularly** after each phase and any significant milestone
+- **Work autonomously** -- don't ask permission, just do it and show results. The user prefers seeing completed work over being asked for approval at every step.
 
 ## Important Reminders
 
@@ -242,3 +330,6 @@ Always use the Python utilities in `utils/` rather than writing one-off code:
 - **Simple changes first.** Try hyperparameter adjustments before architectural changes.
 - **Read the templates.** They define the expected output format for each agent.
 - **Check status.md.** Before starting work, check what other agents have done.
+- **Read `docs/lessons_from_esta.md`.** Before your first experiment, absorb the failure modes.
+- **Audit every metric.** Ask what it's actually measuring, not what it's supposed to measure.
+- **Define success criteria upfront.** No moving goalposts.
