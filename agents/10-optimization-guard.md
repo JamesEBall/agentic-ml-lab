@@ -74,15 +74,24 @@ Read `project/problem_spec.md` compute section and verify:
 - Disk space for checkpoints/artifacts
 - If remote: connection details are present
 
-#### 4. Data Pipeline Checks
+#### 4. Compute Target Verification
+
+**BEFORE approving any run**, read `project/problem_spec.md` and verify:
+- The training script will execute on the correct machine (local vs remote)
+- If remote (SSH), the connection details are present and the script is configured to run there
+- Do NOT approve a run that will execute locally when the problem spec says remote
+
+#### 5. Data Pipeline Checks
 
 - Train/test split doesn't accidentally leak data
 - Preprocessing is fitted on train only
 - No accidental shuffling of time series data
 - Class imbalance is addressed (or explicitly noted as acceptable)
 - Feature scaling applied when needed (SVM, KNN, neural nets)
+- **Data loading profiled** — if raw data is compressed (LZMA, gzip, bz2), a cached fast version (Parquet/HDF5) should exist after the first run
+- **Null safety** — scripts must handle missing/null values in raw data (log and skip, don't crash)
 
-#### 5. Redundancy Check
+#### 6. Redundancy Check
 
 - Is this run identical to a previous run? Check MLflow for duplicate configs
 - Is the change from the previous run too small to matter? (e.g., lr 0.001 → 0.0011)

@@ -194,6 +194,52 @@ ratio = mean(intra-player distances) / mean(inter-player distances)
 
 ---
 
+## 12. Data Preprocessing Can Be the Bottleneck
+
+**The problem:** ESTA demo files used LZMA compression. Decompressing 6,662 rounds took significant wall-clock time — minutes per batch of files. The agents didn't anticipate this and treated data loading as instant.
+
+**What happened:** The pipeline spent more time decompressing data than training the model. Agents kept waiting, retrying, or timing out because they expected data loading to be near-instant.
+
+**The fix:**
+- Profile data loading as a separate step BEFORE training
+- Convert compressed/slow formats to fast formats (Parquet, memory-mapped NumPy, HDF5) once, then use the fast version for all subsequent runs
+- Cache preprocessed data to disk — never re-process the same raw data twice
+
+**The lesson for the framework:** The Optimization Guard should profile data loading time as part of its pre-flight check. If loading takes >10% of estimated training time, recommend converting to a faster format first. The Model Builder should always check if a preprocessed cache exists before loading raw data.
+
+---
+
+## 13. Null Safety in Raw Data Processing
+
+**The problem:** ESTA demo files contained rounds where the players list was null/None. The processing code called `len(players)` or iterated over players without checking for null, causing `TypeError: object of type 'NoneType' has no len()` crashes.
+
+**What happened:** The pipeline processed hundreds of files successfully, then crashed mid-batch on a file with null players. All progress since the last checkpoint was lost.
+
+**The fix:**
+- Add defensive null checks before any operation on data loaded from external sources
+- Use `if players is not None and len(players) > 0:` patterns
+- Log and skip malformed records rather than crashing
+- Report the number of skipped records at the end
+
+**The lesson for the framework:** The Model Builder and data loading utilities must treat ALL external data as potentially malformed. Every field accessed from raw data should have a null check. The data_loader utility should have a `strict=False` mode that logs and skips bad records instead of crashing.
+
+---
+
+## 14. Always Train on the Designated Compute Target
+
+**The problem:** The problem_spec.md said training should run on the Mac Mini (a dedicated training server accessible via SSH). But agents sometimes ran training on the local development machine instead — either because they forgot to check the compute section, or because it was "easier" to just run locally.
+
+**What happened:** Training ran on the wrong machine (weaker GPU, different environment, missing dependencies). Results were inconsistent. Worse, the local machine became unresponsive during heavy training while the Mac Mini sat idle.
+
+**The fix:**
+- The Iterator/Evaluator agent must ALWAYS read `project/problem_spec.md` compute section before the first training run
+- If the compute target is remote (SSH), all training scripts must be executed on that target — no exceptions
+- The Optimization Guard should verify the execution target matches the problem spec before approving any run
+
+**The lesson for the framework:** Compute environment is not optional metadata — it's a critical execution parameter. The problem spec compute section is the single source of truth for WHERE training happens. Every agent that executes code must check it.
+
+---
+
 ## Summary Table
 
 | Lesson | Detection Signal | Recommended Action |
@@ -209,3 +255,6 @@ ratio = mean(intra-player distances) / mean(inter-player distances)
 | Misleading active dims | Dims at free_bits floor counted as active | Visualize per-dim KL, don't trust scalar |
 | Simple > complex | Hyperparameter change outperforms architecture | Test simple changes first |
 | No success criteria | Post-hoc rationalization of results | Define criteria before training |
+| Slow data preprocessing | LZMA/compressed files take minutes to decompress | Profile data loading first, convert to fast format |
+| Null/missing data crashes | NoneType errors from missing fields in raw data | Defensive null checks before any processing |
+| Wrong compute target | Training runs on local machine instead of dedicated server | Always read problem_spec.md compute section first |

@@ -62,12 +62,30 @@ with start_run(run_name=config['run_name'], tags=config['mlflow'].get('tags', {}
     log_artifact("project/visualizations/training/run_{run_id}.png")
 ```
 
+#### Step 2.5: Profile Data Loading (First Run Only)
+
+Before the first training run, profile data loading separately:
+1. Time how long it takes to load and preprocess the data
+2. If loading takes >30 seconds, convert to a fast format (Parquet, HDF5, memory-mapped NumPy)
+3. Save the fast version to `project/data/` and update the config to use it
+4. All subsequent runs use the cached fast version — never re-decompress raw data
+
+**Null safety:** When loading external data, always check for null/missing values in every field before processing. Log and skip malformed records rather than crashing. Report the skip count.
+
 #### Step 3: Execute Training
+
+**CRITICAL: Check compute target FIRST.** Before running ANY script:
+1. Read `project/problem_spec.md` — find the `## Compute Environment` section
+2. If it specifies a remote target (SSH host, cloud platform), execute on that target
+3. If it specifies local, execute locally
+4. NEVER run training on a different machine than what the problem spec says
 
 Run the training script on the appropriate compute environment:
 - **Local:** `python project/scripts/run_{run_id}.py`
 - **Remote SSH:** `ssh {host} "cd {remote_path} && python run_{run_id}.py"`
 - **Other:** Follow compute setup instructions from problem_spec.md
+
+The problem_spec compute section is the single source of truth. Do not "just run it locally to test" when the spec says remote.
 
 #### Step 4: Analyze Results
 

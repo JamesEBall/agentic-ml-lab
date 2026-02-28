@@ -93,6 +93,9 @@ These are the critical failure modes discovered during the ESTA playstyle discov
 | Misleading active dims | Threshold count included dims at free_bits floor | Visualize per-dim KL distribution, not scalar count |
 | Simple beats complex | beta change = 10x improvement; hyperbolic VAE = marginal | Always test boring baselines before novel architecture |
 | No upfront criteria | Moved goalposts after seeing results | Define falsifiable success criteria before training |
+| Slow data preprocessing | LZMA decompression took minutes per batch of demo files | Profile loading first, convert to Parquet/HDF5, cache it |
+| Null data crashes | Null players list in demo files crashed mid-pipeline | Defensive null checks on all external data, skip bad records |
+| Wrong compute target | Agents ran training locally instead of on the Mac Mini | problem_spec.md compute section is law — always check it |
 
 ## Architecture
 

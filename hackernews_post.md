@@ -24,7 +24,7 @@ The interesting part isn't the automation. It's the adversarial agents:
 - **The Bureaucrat** demands confidence intervals. "Your 96.7% accuracy on 30 samples has a 95% CI of ±7%. That is NOT 96.7% accuracy." Tracks cost per percentage point of improvement.
 - **Post-Hoc Analyst** does the work nobody wants to do: feature attribution, error clustering in PCA space, and asking uncomfortable questions like "what is this metric actually measuring?"
 
-The whole thing encodes 11 concrete lessons from the VAE project as detection signals. The Iterator agent knows to visualize per-dim KL distributions instead of trusting scalar "active dims" counts. It knows to regress latent dimensions against potential confounds. It knows that O(B²) operations hang on MPS.
+The whole thing encodes 14 concrete lessons from the VAE project as detection signals. The Iterator agent knows to visualize per-dim KL distributions instead of trusting scalar "active dims" counts. It knows to regress latent dimensions against potential confounds. It knows that O(B²) operations hang on MPS.
 
 **The 5-phase loop:**
 
@@ -40,4 +40,4 @@ The agents are just markdown. You can read every prompt, edit them, tune them li
 
 GitHub: https://github.com/JamesEBall/agentic-ml-lab
 
-The ESTA lessons table is in the README. The full writeup of all 11 failure modes with detection signals and fixes is in docs/lessons_from_esta.md.
+The ESTA lessons table is in the README. The full writeup of all 14 failure modes with detection signals and fixes is in docs/lessons_from_esta.md.

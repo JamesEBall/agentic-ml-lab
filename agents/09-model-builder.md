@@ -104,6 +104,22 @@ with start_run(run_name=config['run_name'], tags=config['mlflow'].get('tags', {}
 - Normalize/scale features when needed (SVM, KNN, neural nets)
 - Never leak test data into training (no fitting scalers on test)
 - Validate data shapes before training
+- **Check for cached preprocessed data** before loading raw data — if `project/data/` has a Parquet/HDF5/NPY version, use that instead of re-processing
+- **Profile data loading** on first run — if raw data is compressed (LZMA, gzip, bz2) or slow to parse (large CSV, nested JSON), convert to a fast format and cache it
+- **Null safety on all external data** — every field loaded from files must be null-checked before use:
+  ```python
+  # BAD: crashes on null
+  n_players = len(row['players'])
+
+  # GOOD: defensive
+  players = row.get('players')
+  if players is None:
+      logging.warning(f"Skipping record {i}: null players field")
+      skipped += 1
+      continue
+  n_players = len(players)
+  ```
+- Log the number of skipped/malformed records at the end — silent data loss is worse than a crash
 
 ### Error Handling
 

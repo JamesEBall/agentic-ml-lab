@@ -72,6 +72,9 @@ If the user provides data or a path to data:
 1. Load a small sample (first 100 rows or 1% of data)
 2. Report: shape, dtypes, missing values, basic stats
 3. Flag any immediate concerns
+4. **Profile data loading time** — if files are compressed (LZMA, gzip, bz2) or large (>100MB CSV), note this as a preprocessing bottleneck
+5. **Check for null/missing fields** — report how many records have null values in critical columns
+6. **Recommend format conversion** if loading is slow — suggest converting to Parquet or HDF5 as a first step
 
 ### Step 4: Write Problem Specification
 
@@ -88,11 +91,13 @@ Iterate until the user confirms.
 ### Step 6: Commit
 
 ```bash
-cd ~/agentic-ml-lab
+cd ~/Documents/github/agentic-ml-lab
 git add project/problem_spec.md project/status.md
 git commit -m "Phase 1: Problem specification for {project_name}"
 git push
 ```
+
+**CRITICAL:** The compute environment section you write to `problem_spec.md` becomes the single source of truth for ALL downstream agents. If training should run on a remote machine (SSH to a Mac Mini, cloud GPU, etc.), every agent that executes code will read your compute section and run there — not locally. Get this right.
 
 ## Communication
 

@@ -212,6 +212,9 @@ These are the pathologies discovered during ESTA development. The Iterator agent
 | Overfitting | Train loss decreasing, val loss increasing | Regularization, data augmentation, early stopping |
 | Mode collapse (GAN/VAE) | Generated samples lack diversity | Diversity loss, different sampling strategy |
 | Hardware crash false alarm | W&B says "crashed" but process alive | Check checkpoint timestamps, `ps aux`, not W&B status |
+| Slow data preprocessing | Data loading takes minutes (LZMA, gzip, large CSVs) | Profile loading separately, convert to Parquet/HDF5, cache preprocessed data |
+| Null data crash | `TypeError: NoneType` on raw data fields | Defensive null checks on all external data, log and skip bad records |
+| Wrong compute target | Training runs locally instead of on designated server | ALWAYS read problem_spec.md compute section before executing ANY training |
 
 ## Agent Spawning Patterns
 
@@ -331,6 +334,12 @@ If a command or script fails with the same error twice, STOP RETRYING. Read the 
 3. **Never use sleep-poll loops.** If you need to wait for something, use `run_in_background` and let the system notify you. Do not write `sleep 10 && tail -5 logfile` loops.
 4. **If a script has an ImportError, fix the script's sys.path.** Do not try running from a different directory. Do not try `cd somewhere && python script.py`. The script itself must resolve its own paths.
 
+### Compute Target Rule
+Before executing ANY training script, read `project/problem_spec.md` and check the compute environment section. If it specifies a remote target (SSH, cloud, etc.), ALL training must run there — not locally. No exceptions. No "I'll just run it locally to test." The problem spec is the single source of truth for where training happens.
+
+### Data Loading Rule
+Always profile data loading as a separate step before training. If raw data is compressed (LZMA, gzip, bz2) or in a slow format (large CSV, JSON), convert to a fast format (Parquet, HDF5, memory-mapped NumPy) ONCE and use the fast version for all runs. Never re-decompress the same data twice. Always add null checks when processing external data — log and skip malformed records rather than crashing.
+
 ### When Stuck
 - Write the error and what you tried to `project/status.md`
 - Mark the run as `status: failed` with the full traceback
@@ -345,6 +354,9 @@ If a command or script fails with the same error twice, STOP RETRYING. Read the 
 | Background everything | Agent loses track of what's running | Only background truly long tasks (>5 min) |
 | Retry without reading error | Same error 4 times in a row | Read the traceback. Fix the cause. |
 | SSH retry loop | Remote command fails, agent keeps SSHing | Check connection once, then fix locally |
+| Training on wrong machine | Runs locally when problem_spec says remote | ALWAYS check problem_spec.md compute section first |
+| Re-decompressing data | LZMA/gzip decompression every run | Convert to fast format once, cache it |
+| Null crash mid-pipeline | Raw data has missing fields, crash at record N | Add null checks, skip bad records, report count |
 
 ## Development Workflow Preferences
 
