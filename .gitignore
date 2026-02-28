@@ -1,0 +1,47 @@
+# MLflow
+mlruns/
+mlartifacts/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+dist/
+build/
+*.egg
+.eggs/
+*.so
+
+# Virtual environments
+venv/
+.venv/
+env/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Project artifacts (large files)
+project/data/
+project/**/*.pkl
+project/**/*.pt
+project/**/*.pth
+project/**/*.h5
+project/**/*.ckpt
+
+# Secrets
+.env
+*.pem
+*.key
+credentials.json
+
+# Jupyter
+.ipynb_checkpoints/
