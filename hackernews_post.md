@@ -1,39 +1,43 @@
 # Hacker News Post
 
-## Title (80 char limit)
+## Title
 
-Show HN: Agentic ML Lab – 16 AI agents that run the full ML research lifecycle
+Show HN: 16 ML agents born from a VAE project where every metric lied to me
 
 ## Body
 
-I built a framework where Claude Code orchestrates 16 specialized agents through the entire ML research pipeline: problem definition → literature review → EDA → experiment design → training → evaluation → iteration.
+I spent months building a CS:GO playstyle discovery system (hierarchical Transformer beta-VAE on the ESTA dataset). It taught me more about ML failure modes than any course:
 
-The agents are just markdown prompt templates. No custom infrastructure. Claude Code's Agent tool spawns them as foreground (interactive) or background (parallel) processes. They communicate through files in a shared project directory.
+- My "active dimensions" metric said 15/16 dims were active. Visualizing per-dim KL revealed 2 were actually doing anything — the rest sat at the free_bits floor and got counted as "active."
+- Silhouette score was positive and improving. It was measuring map geometry separation, not playstyle. 20.3% of my latent variance was explained by which map the round was played on.
+- Cyclical annealing was supposed to help. Structure appeared, then got destroyed every cycle.
+- The hyperbolic VAE I spent weeks implementing? Marginal improvement. Changing beta from 1.0 to 0.1? 10x improvement.
 
-**What makes it interesting:**
+Every one of these cost GPU hours I'll never get back. So I built a framework to stop it from happening again.
 
-The agent roster goes beyond "run experiments." There's a Devil's Advocate that challenges your approach before you waste compute. A Blue Sky agent that proposes creative alternatives. An Optimization Guard that estimates training time and blocks bad configs. A "Bureaucrat" that demands confidence intervals and statistical significance tests for every comparison. And a Post-Hoc Analyst that does feature attribution, error clustering in PCA space, and epistemological reflection on what your results actually prove.
+**Agentic ML Research Lab** is 16 specialized agents that run the full ML research lifecycle in Claude Code. The agents are markdown files — no framework, no SDK. Claude reads the prompt and follows it.
 
-**The key insight that motivated this:**
+The interesting part isn't the automation. It's the adversarial agents:
 
-Building an earlier ML project, I discovered that simple hyperparameter changes (beta 1.0→0.1, free_bits 0.1→1.0) had 10x more impact than complex architectural changes. The iteration loop matters more than the initial design. So the framework is built around fast iteration with aggressive guardrails.
+- **Devil's Advocate** challenges your approach before you waste compute. Data leakage? Wrong metric? Overfitting risk on a tiny dataset?
+- **Optimization Guard** does a pre-flight check on every config. Estimates training time, profiles a single batch on your hardware, blocks runs that would blow budget.
+- **The Bureaucrat** demands confidence intervals. "Your 96.7% accuracy on 30 samples has a 95% CI of ±7%. That is NOT 96.7% accuracy." Tracks cost per percentage point of improvement.
+- **Post-Hoc Analyst** does the work nobody wants to do: feature attribution, error clustering in PCA space, and asking uncomfortable questions like "what is this metric actually measuring?"
 
-**Practical details:**
+The whole thing encodes 11 concrete lessons from the VAE project as detection signals. The Iterator agent knows to visualize per-dim KL distributions instead of trusting scalar "active dims" counts. It knows to regress latent dimensions against potential confounds. It knows that O(B²) operations hang on MPS.
 
-- MLflow tracks everything
-- Visualization Agent views and semantically interprets every plot it generates (not just "saved plot.png" — actually describes what the data means)
-- Detects your compute environment (local GPU, MPS on Mac, cloud) and adapts
-- Git commits at every milestone
-- Tested end-to-end with Iris classification (yes, it's overkill for Iris — that's the point of a smoke test)
+**The 5-phase loop:**
 
-**The 5-phase workflow:**
+1. Problem Intake — interviews you, detects your GPU, writes a problem spec with falsifiable success criteria
+2. Research Sprint — 4 agents search papers/datasets/benchmarks/code in parallel while viz agent does EDA
+3. Plan Refinement — Devil's Advocate + Blue Sky challenge the plan, you approve
+4. Experiments — simple hyperparameter changes first, complex architecture second, MLflow tracks everything
+5. Analysis — statistical audit, post-hoc interpretation, you decide: iterate, pivot, or done
 
-1. Problem Intake — interactive interview + compute detection
-2. Research Sprint — 4 parallel agents search papers, datasets, benchmarks, code
-3. Plan Refinement — Devil's Advocate + Blue Sky challenge the plan, user approves
-4. Experiments — Optimization Guard → Model Builder → train → evaluate → adjust loop
-5. Analysis — Bureaucrat audits statistics, Post-Hoc Analyst decomposes why results happened
+Tested end-to-end with Iris classification (overkill, but that's the point of a smoke test — 4 models, MLflow tracking, confusion matrices, comparison charts, all automated).
 
-Everything is open source. It's a single repo you clone, run setup.sh, and start describing your ML problem.
+The agents are just markdown. You can read every prompt, edit them, tune them like hyperparameters. If your Bureaucrat is too aggressive, tone it down. If your Blue Sky agent isn't creative enough, rewrite it.
 
 GitHub: https://github.com/JamesEBall/agentic-ml-lab
+
+The ESTA lessons table is in the README. The full writeup of all 11 failure modes with detection signals and fixes is in docs/lessons_from_esta.md.
