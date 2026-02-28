@@ -5,7 +5,6 @@
 
 **16 specialized agents that run the full ML research lifecycle** — from "I have a CSV" to "here's what the model learned and why." Built natively in Claude Code. The agents are just markdown prompt templates. No framework, no SDK, no magic.
 
-This came out of building [ESTA Playstyle Discovery](https://github.com/JamesEBall/esta), where I learned the hard way that tweaking `beta` from 1.0→0.1 improved my VAE more than weeks of architectural redesign. `free_bits` 0.1→1.0 had 10x the impact of adding a fancy encoder. The iteration loop matters more than the initial design — so I built a framework that treats fast, cheap experiments as first-class citizens.
 
 ## Setup
 
