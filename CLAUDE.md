@@ -313,6 +313,39 @@ Always use the Python utilities in `utils/` rather than writing one-off code:
 - `utils/data_loader.py` -- Data loading and validation
 - `utils/file_io.py` -- Status updates, project directory management
 
+## CRITICAL: Do Not Get Stuck (Anti-Loop Rules)
+
+These rules exist because agents get trapped in retry loops. This is the #1 failure mode in practice.
+
+### The 2-Strike Rule
+If a command or script fails with the same error twice, STOP RETRYING. Read the error, diagnose the root cause, fix it, then try once more. Never run the same failing command a third time.
+
+### Script Execution
+1. **Every script must be self-contained for imports.** Add this header to every generated Python script:
+   ```python
+   import sys, os
+   PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+   sys.path.insert(0, PROJECT_ROOT)
+   ```
+2. **Run scripts in the foreground.** Do not use `nohup ... &`, `sleep && tail`, or background processes for scripts that take <5 minutes. You need to see the output immediately.
+3. **Never use sleep-poll loops.** If you need to wait for something, use `run_in_background` and let the system notify you. Do not write `sleep 10 && tail -5 logfile` loops.
+4. **If a script has an ImportError, fix the script's sys.path.** Do not try running from a different directory. Do not try `cd somewhere && python script.py`. The script itself must resolve its own paths.
+
+### When Stuck
+- Write the error and what you tried to `project/status.md`
+- Mark the run as `status: failed` with the full traceback
+- Move on to the next experiment
+- Do NOT keep retrying the same approach
+
+### Common Traps to Avoid
+| Trap | What happens | What to do instead |
+|------|-------------|-------------------|
+| Directory roulette | Agent tries running from 5 different directories | Fix sys.path in the script |
+| Sleep-poll loop | Agent sleeps, checks log, sleeps, checks log | Run in foreground or use run_in_background |
+| Background everything | Agent loses track of what's running | Only background truly long tasks (>5 min) |
+| Retry without reading error | Same error 4 times in a row | Read the traceback. Fix the cause. |
+| SSH retry loop | Remote command fails, agent keeps SSHing | Check connection once, then fix locally |
+
 ## Development Workflow Preferences
 
 - **Always use background agents** for research, journal updates, paper downloads, and similar non-blocking tasks
@@ -333,3 +366,4 @@ Always use the Python utilities in `utils/` rather than writing one-off code:
 - **Read `docs/lessons_from_esta.md`.** Before your first experiment, absorb the failure modes.
 - **Audit every metric.** Ask what it's actually measuring, not what it's supposed to measure.
 - **Define success criteria upfront.** No moving goalposts.
+- **Never retry the same failure more than twice.** Read the error. Fix the cause. See anti-loop rules above.

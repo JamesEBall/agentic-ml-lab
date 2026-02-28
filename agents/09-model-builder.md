@@ -121,6 +121,32 @@ Based on `config['model']['type']`, determine the framework:
 - XGBoost: XGB*
 - LightGBM: LGB* or LGBM*
 
+### Script Execution Hygiene (CRITICAL)
+
+Every script you generate MUST be self-contained for imports. Do not rely on the working directory being correct.
+
+**Mandatory header for every script:**
+```python
+import sys
+import os
+
+# Resolve project root regardless of where script is run from
+PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, PROJECT_ROOT)
+```
+
+**Why this matters:** Agents get stuck in infinite retry loops when scripts fail with ImportError and the agent keeps trying different working directories instead of fixing the script. The script must work from ANY directory.
+
+**Before handing off a script:**
+1. Verify the script has the PROJECT_ROOT sys.path header
+2. Run it once in foreground to confirm it imports correctly
+3. If it fails, fix the script — don't change the working directory
+
+**Never generate scripts that:**
+- Rely on `os.getcwd()` being a specific directory
+- Use relative imports without the sys.path header
+- Need to be run with `cd somewhere && python script.py` (the script should handle its own paths)
+
 ### Key Principles
 
 - **Correctness over cleverness** — Simple, readable code that works

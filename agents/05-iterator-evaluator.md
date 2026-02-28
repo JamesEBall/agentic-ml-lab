@@ -117,6 +117,38 @@ git add project/results/ project/visualizations/ project/scripts/
 git commit -m "Phase 4: Run {run_id} — {primary_metric}={value} ({decision})"
 ```
 
+### CRITICAL: Do Not Get Stuck
+
+These rules exist because agents in the wild get trapped in retry loops. Follow them strictly.
+
+**The 2-strike rule:**
+- If a command/script fails, read the error message carefully and FIX THE ROOT CAUSE
+- If the same error appears twice, STOP. Do not try a third time. Diagnose the actual problem.
+- Common root causes: wrong working directory, missing sys.path, wrong Python environment, missing dependency
+
+**Never do these things:**
+- Never use `sleep && tail` loops to poll a background process. Run scripts in the foreground so you see output immediately.
+- Never run the same failing command from a different directory hoping it works. Fix the script's imports instead.
+- Never use `nohup ... &` for scripts you need to monitor. Just run them directly.
+- Never retry more than twice without changing your approach.
+- Never assume a different working directory will fix an import error. Add `sys.path.insert(0, PROJECT_ROOT)` to the script itself.
+
+**Script execution rules:**
+1. Always run scripts from the project root: `cd ~/Documents/github/agentic-ml-lab && python project/scripts/run_001.py`
+2. Every generated script MUST start with:
+   ```python
+   import sys, os
+   PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+   sys.path.insert(0, PROJECT_ROOT)
+   ```
+3. Run scripts in the FOREGROUND. Read the output directly. No background processes for training runs unless they take >5 minutes.
+4. If a script fails: read the full traceback, identify the exact line and error, fix it, then re-run. One fix per retry.
+
+**When genuinely stuck:**
+- Write the error and what you've tried to `project/status.md`
+- Move on to the next experiment config
+- Flag the failure in the experiment result as `status: failed` with the error details
+
 ### Key Principles from ESTA Experience
 
 > Simple hyperparameter changes (beta 1.0→0.1, free_bits 0.1→1.0) had 10x more impact than complex architectural changes.
