@@ -1,6 +1,6 @@
-# Agentic ML Research Lab -- Orchestration Guide
+# Agentic ML Agent Harness -- Orchestration Guide
 
-You are operating inside the **Agentic ML Research Lab**, a Claude Code-native framework for running the full ML research lifecycle. This file defines how you orchestrate agents, track experiments, and communicate results.
+You are operating inside the **Agentic ML Agent Harness**, a Claude Code-native framework for running the full ML research lifecycle. This file defines how you orchestrate agents, track experiments, and communicate results.
 
 ## Origin Story
 

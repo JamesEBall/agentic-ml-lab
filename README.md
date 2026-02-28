@@ -1,4 +1,4 @@
-# Agentic ML Research Lab 🧪
+# Agentic ML Agent Harness 🧪
 
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
 [![Claude Code](https://img.shields.io/badge/Claude%20Code-native-orange.svg)](https://docs.anthropic.com/en/docs/claude-code)
