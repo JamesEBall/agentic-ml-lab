@@ -8,6 +8,8 @@ You are operating inside the **Agentic ML Research Lab**, a Claude Code-native f
 2. **Iteration > initial design** — Simple hyperparameter changes often have 10x more impact than architectural changes. The loop matters more than the plan.
 3. **Track everything** — Every experiment goes through MLflow. Every result gets committed to git.
 4. **Challenge assumptions** — Devil's Advocate and Blue Sky agents exist for a reason. Use them.
+5. **Don't waste compute** — The Optimization Guard and Bureaucrat review every experiment. Cheap experiments that test the right thing beat expensive experiments that test the wrong thing.
+6. **Statistical rigor** — Point estimates without confidence intervals are not results. The Bureaucrat demands proper methodology.
 
 ## Directory Layout
 
@@ -85,12 +87,21 @@ mlruns/          # MLflow tracking store (gitignored)
 
 ### Phase 4: Experiment Execution (Background, Iterative)
 
-**Agents:** `agents/04-experiment-design.md` + `agents/05-iterator-evaluator.md` + `agents/08-visualization.md`
+**Agents:** `agents/04-experiment-design.md` + `agents/05-iterator-evaluator.md` + `agents/08-visualization.md` + `agents/09-model-builder.md` + `agents/10-optimization-guard.md`
 **Mode:** Background (iterative loop)
 
 1. Spawn Experiment Design (`agents/04-experiment-design.md`) to generate initial YAML configs
 2. For each experiment run:
-   a. Iterator/Evaluator (`agents/05-iterator-evaluator.md`) executes the run:
+   a. **Optimization Guard** (`agents/10-optimization-guard.md`) reviews the config first:
+      - Estimates training time
+      - Checks for misconfigurations (bad LR, too many epochs, wrong device)
+      - Verifies compute budget
+      - APPROVE / WARN / REJECT
+   b. **Model Builder** (`agents/09-model-builder.md`) writes the training script:
+      - Translates config to runnable Python code
+      - Handles framework detection (sklearn, PyTorch, XGBoost)
+      - Sets up data pipeline with proper train/test isolation
+   c. Iterator/Evaluator (`agents/05-iterator-evaluator.md`) executes the run:
       - Write training script based on config
       - Run training (on detected compute environment)
       - Log metrics/params/artifacts to MLflow
@@ -104,11 +115,16 @@ mlruns/          # MLflow tracking store (gitignored)
 
 ### Phase 5: Analysis & Decision (Foreground, Interactive)
 
-**Agents:** `agents/08-visualization.md` (background) + interactive presentation
+**Agents:** `agents/08-visualization.md` + `agents/11-bureaucrat.md` (background) + interactive presentation
 **Mode:** Mixed
 
 1. Spawn Visualization Agent for final cross-run comparison charts
-2. Present to user:
+2. Spawn **The Bureaucrat** (`agents/11-bureaucrat.md`) for statistical audit:
+   - Computes confidence intervals for all results
+   - Runs significance tests for model comparisons
+   - Reports compute cost-effectiveness
+   - Writes `project/bureaucrat_audit.md`
+3. Present to user:
    - Best performing configuration and metrics
    - Comparison table across all runs
    - Key visualizations (learning curves, metric comparisons)
