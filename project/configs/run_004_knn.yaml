@@ -1,0 +1,32 @@
+run_name: "knn"
+run_id: "004"
+description: "K-Nearest Neighbors classifier"
+
+model:
+  type: "KNeighborsClassifier"
+  params:
+    n_neighbors: 5
+
+data:
+  source: "sklearn_iris"
+  train_split: 0.8
+  test_split: 0.2
+  seed: 42
+
+evaluation:
+  metrics:
+    - accuracy
+    - f1
+    - precision
+    - recall
+  primary_metric: accuracy
+  primary_mode: max
+
+compute:
+  device: cpu
+
+mlflow:
+  experiment_name: "iris-classifier"
+  tags:
+    phase: "4"
+    iteration: "1"

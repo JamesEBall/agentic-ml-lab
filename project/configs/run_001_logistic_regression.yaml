@@ -1,0 +1,33 @@
+run_name: "logistic_regression"
+run_id: "001"
+description: "Baseline logistic regression classifier"
+
+model:
+  type: "LogisticRegression"
+  params:
+    max_iter: 200
+    random_state: 42
+
+data:
+  source: "sklearn_iris"
+  train_split: 0.8
+  test_split: 0.2
+  seed: 42
+
+evaluation:
+  metrics:
+    - accuracy
+    - f1
+    - precision
+    - recall
+  primary_metric: accuracy
+  primary_mode: max
+
+compute:
+  device: cpu
+
+mlflow:
+  experiment_name: "iris-classifier"
+  tags:
+    phase: "4"
+    iteration: "1"

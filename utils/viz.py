@@ -232,12 +232,18 @@ def plot_learning_rate(lr_history: list, save_path=None):
 # ========== Evaluation Plots ==========
 
 def plot_confusion_matrix(y_true, y_pred, labels=None, save_path=None):
-    """Plot confusion matrix heatmap."""
+    """Plot confusion matrix heatmap.
+
+    Args:
+        labels: Display labels for the axes (e.g., class names). These are used
+                for tick labels only — the confusion matrix is computed from y_true/y_pred directly.
+    """
     from sklearn.metrics import confusion_matrix
-    cm = confusion_matrix(y_true, y_pred, labels=labels)
+    cm = confusion_matrix(y_true, y_pred)
+    display_labels = labels if labels is not None else "auto"
     fig, ax = plt.subplots(figsize=(max(6, len(cm) * 0.8), max(5, len(cm) * 0.7)))
     sns.heatmap(cm, annot=True, fmt="d", cmap="Blues", ax=ax,
-                xticklabels=labels or "auto", yticklabels=labels or "auto")
+                xticklabels=display_labels, yticklabels=display_labels)
     ax.set_title("Confusion Matrix")
     ax.set_xlabel("Predicted")
     ax.set_ylabel("Actual")
